@@ -59,6 +59,8 @@ void setup() {
   lc.setIntensity(0,15);
   lc.clearDisplay(0);
 
+  pinMode(5, INPUT_PULLUP);
+
   delay(100);
   highScore = EEPROM.read(0);
   //EEPROM.write(0, 0);
@@ -71,19 +73,19 @@ void setup() {
 
   //*******************************
   //Audio setup
-  AudioMemory(10);
-  audioShield.enable();
-  audioShield.volume(0.5);
+  // AudioMemory(10);
+  // audioShield.enable();
+  // audioShield.volume(0.5);
   
-  SPI.setMOSI(SDCARD_MOSI_PIN);
-  SPI.setSCK(SDCARD_SCK_PIN);
-  if (!(SD.begin(SDCARD_CS_PIN))) {
-    // stop here, but print a message repetitively
-    while (1) {
-      Serial.println("Unable to access the SD card");
-      delay(500);
-    }
-  }
+  // SPI.setMOSI(SDCARD_MOSI_PIN);
+  // SPI.setSCK(SDCARD_SCK_PIN);
+  // if (!(SD.begin(SDCARD_CS_PIN))) {
+  //   // stop here, but print a message repetitively
+  //   while (1) {
+  //     Serial.println("Unable to access the SD card");
+  //     delay(500);
+  //   }
+  // }
   
   //*******************************
 
@@ -96,6 +98,7 @@ void loop() {
   checkGameTime();
   checkForScore();
   checkGameState();
+  checkResetScoreButton();
 //  delay(10);
     
 }
@@ -151,4 +154,12 @@ void checkGameState(){
     }
     currentGameScore = 0;
   }
+}
+
+void checkResetScoreButton(){
+	if(digitalRead(5) == LOW){
+		highScore = 0;
+		EEPROM.write(0, 0);
+		printMaxScore(0);
+	}
 }
