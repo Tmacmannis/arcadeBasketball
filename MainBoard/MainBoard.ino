@@ -2,17 +2,41 @@
 #include "LedControl.h"
 #include <EEPROM.h>
 #include <Wire.h>
+#include <Audio.h>
+#include <SPI.h>
+#include <SD.h>
+#include <SerialFlash.h>
 
-/*
- Now we need a LedControl to work with.
- ***** These pin numbers will probably not work with your hardware *****
- pin 12 is connected to the DataIn 
- pin 11 is connected to the CLK 
- pin 10 is connected to LOAD 
- We have only a single MAX72XX.
- */
+#define SDCARD_CS_PIN    10
+#define SDCARD_MOSI_PIN  7
+#define SDCARD_SCK_PIN
+
+//*******************************
+//Audio Setup
+AudioPlaySdWav     playWav1;
+AudioPlaySdWav     playWav2;
+AudioPlaySdWav     playWav3;
+AudioPlaySdWav     playWav4;
+AudioMixer4        mix1;
+AudioOutputI2S     headphones;
+AudioOutputAnalog  dac;     // play to both I2S audio board and on-chip DAC
+
+AudioConnection c1(playWav1, 0, mix1, 0);
+AudioConnection c2(playWav2, 0, mix1, 1);
+AudioConnection c3(playWav3, 0, mix1, 2);
+AudioConnection c4(playWav4, 0, mix1, 3);
+AudioConnection c5(mix1, 0, headphones, 0);
+AudioConnection c6(mix1, 0, headphones, 1);
+AudioConnection c10(mix1, 0, dac, 0);
+
+AudioControlSGTL5000 audioShield;
+
+#define SDCARD_CS_PIN    10
+#define SDCARD_MOSI_PIN  7
+#define SDCARD_SCK_PIN   14
+//*******************************
  
-LedControl lc=LedControl(12,11,10,1);
+LedControl lc=LedControl(4,3,2,1);
 boolean on = false;
 volatile int score = 0;
 
@@ -26,8 +50,9 @@ unsigned long scoreCheckDelay =10;
 boolean gameLive = false;
 
 void setup() {
-  Wire.begin();
+  
   Serial.begin(9600);
+  Serial1.begin(9600);
   pinMode(13, OUTPUT);
   lc.shutdown(0,false);
   lc.setScanLimit(0,5);
@@ -36,12 +61,31 @@ void setup() {
 
   delay(100);
   highScore = EEPROM.read(0);
+  //EEPROM.write(0, 0);
   Serial.println(highScore);
   
   //set digits at start
   printMaxScore(highScore);
   printScore(0);
   printTime(currentGameTime);
+
+  //*******************************
+  //Audio setup
+  AudioMemory(10);
+  audioShield.enable();
+  audioShield.volume(0.5);
+  
+  SPI.setMOSI(SDCARD_MOSI_PIN);
+  SPI.setSCK(SDCARD_SCK_PIN);
+  if (!(SD.begin(SDCARD_CS_PIN))) {
+    // stop here, but print a message repetitively
+    while (1) {
+      Serial.println("Unable to access the SD card");
+      delay(500);
+    }
+  }
+  
+  //*******************************
 
   delay(1000);
   //*******************
@@ -69,30 +113,25 @@ void checkGameTime(){
   if (currentGameTime < 0){
     gameLive = false;
     currentGameTime = 15;
-    currentGameScore = 0;
+    //currentGameScore = 0;
     printMaxScore(highScore);
     printScore(0);
     printTime(currentGameTime);
+    playWav2.play("BUZZER.WAV");
   }
 }
 
 void checkForScore(){
-//  if (Serial.available() > 0) {
-//    Serial.read();
-//    currentGameScore = currentGameScore + 2;
-//    printScore(currentGameScore);
-//  }
-  //Serial.println("test");
   unsigned long currentMillis = millis();
   if (currentMillis - previousScoreTime >= scoreCheckDelay){
-    Serial.println("test");
     previousScoreTime = currentMillis;
-    Wire.requestFrom(8, 1);    // request 6 bytes from slave device #8
-    while (Wire.available()) { // slave may send less than requested
-      char c = Wire.read(); // receive a byte as character
-      Serial.print(c);
+
+    if (Serial1.available() > 0) {
+      char c = Serial1.read();
+      Serial.println(c);
       if (c == 'T'){
         currentGameScore = currentGameScore + 2;
+        playWav1.play("Swish.WAV");
         printScore(currentGameScore);
         if (!gameLive){
           gameLive = true;
@@ -107,7 +146,9 @@ void checkGameState(){
     if(currentGameScore > highScore){
       highScore = currentGameScore;
       printMaxScore(highScore);
+      Serial.println("print high score");
       EEPROM.write(0, highScore);
     }
+    currentGameScore = 0;
   }
 }
