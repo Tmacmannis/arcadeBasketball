@@ -9,6 +9,8 @@ int count;
 int buttonState = 0;         // current state of the button
 int lastButtonState = 0; 
 
+unsigned long previousMillis = 0;
+
 void setup () {
     Serial.begin(9600);  // We initialize serial connection so that we could print values from sensor.
     Wire.begin(8);                // join i2c bus with address #8
@@ -54,6 +56,11 @@ void loop () {
       count++;
       shotMade = true;
       Serial.write("T");
+      unsigned long currentMillis = millis();
+      Serial.print("Time since last shot made: ");
+      Serial.println(currentMillis - previousMillis);
+      previousMillis = currentMillis;
+      
     }
     // Delay a little bit to avoid bouncing
     delay(50);
