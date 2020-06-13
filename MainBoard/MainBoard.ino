@@ -73,19 +73,19 @@ void setup() {
 
   //*******************************
   //Audio setup
-  // AudioMemory(10);
-  // audioShield.enable();
-  // audioShield.volume(0.5);
+  AudioMemory(10);
+  audioShield.enable();
+  audioShield.volume(1.0);
   
-  // SPI.setMOSI(SDCARD_MOSI_PIN);
-  // SPI.setSCK(SDCARD_SCK_PIN);
-  // if (!(SD.begin(SDCARD_CS_PIN))) {
-  //   // stop here, but print a message repetitively
-  //   while (1) {
-  //     Serial.println("Unable to access the SD card");
-  //     delay(500);
-  //   }
-  // }
+  SPI.setMOSI(SDCARD_MOSI_PIN);
+  SPI.setSCK(SDCARD_SCK_PIN);
+  if (!(SD.begin(SDCARD_CS_PIN))) {
+    // stop here, but print a message repetitively
+    while (1) {
+      Serial.println("Unable to access the SD card");
+      delay(500);
+    }
+  }
   
   //*******************************
 

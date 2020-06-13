@@ -51,15 +51,21 @@ void loop () {
       // if the current state is HIGH then the button went from off to on:
       Serial.println("off");
     } else {
-      // if the current state is LOW then the button went from on to off:
-      Serial.println("shot made");
-      count++;
-      shotMade = true;
-      Serial.write("T");
+//      Serial.write("T");
       unsigned long currentMillis = millis();
-      Serial.print("Time since last shot made: ");
+      Serial.print("since last shot made: ");
       Serial.println(currentMillis - previousMillis);
+      if (currentMillis - previousMillis > 137) {
+        count++;
+        shotMade = true;
+        Serial.write("T");
+        Serial.println("score!");
+      } else {
+        Serial.println("****************shot not counted!**************");
+      }
       previousMillis = currentMillis;
+      
+//      delay(100);
       
     }
     // Delay a little bit to avoid bouncing
