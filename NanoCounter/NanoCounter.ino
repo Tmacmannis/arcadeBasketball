@@ -11,6 +11,9 @@ int lastButtonState = 0;
 
 unsigned long previousMillis = 0;
 
+unsigned long buttonPressStart = 0;
+unsigned long buttonPressEnd = 0;
+
 void setup () {
     Serial.begin(9600);  // We initialize serial connection so that we could print values from sensor.
     Wire.begin(8);                // join i2c bus with address #8
@@ -49,17 +52,21 @@ void loop () {
     // if the state has changed, increment the counter
     if (buttonState == HIGH) {
       // if the current state is HIGH then the button went from off to on:
-      Serial.println("off");
+      //Serial.println("off");
+      buttonPressEnd = millis();
+      //Serial.print("time button pressed: ");
+      Serial.println(buttonPressEnd - buttonPressStart);
     } else {
 //      Serial.write("T");
       unsigned long currentMillis = millis();
-      Serial.print("since last shot made: ");
-      Serial.println(currentMillis - previousMillis);
-      if (currentMillis - previousMillis > 137) {
+      //Serial.print("since last shot made: ");
+      //Serial.println(currentMillis - previousMillis);
+      buttonPressStart = millis();
+      if (currentMillis - previousMillis > 90) {
         count++;
         shotMade = true;
         Serial.write("T");
-        Serial.println("score!");
+        //Serial.println("score!");
       } else {
         Serial.println("****************shot not counted!**************");
       }
@@ -69,7 +76,7 @@ void loop () {
       
     }
     // Delay a little bit to avoid bouncing
-    delay(50);
+    delay(10);
   }
   // save the current state as the last state, for next time through the loop
   lastButtonState = buttonState;
