@@ -42,7 +42,7 @@ volatile int score = 0;
 
 int currentGameScore = 0;
 int highScore = 0;
-int currentGameTime = 15;
+int currentGameTime = 30;
 long previousGameTime = 0;
 long previousScoreTime = 0;
 unsigned long delaytime=1000;
@@ -63,7 +63,6 @@ void setup() {
 
   delay(100);
   highScore = EEPROM.read(0);
-  //EEPROM.write(0, 0);
   Serial.println(highScore);
   
   //set digits at start
@@ -94,13 +93,11 @@ void setup() {
 }
 
 void loop() { 
-
+	
   checkGameTime();
   checkForScore();
   checkGameState();
   checkResetScoreButton();
-//  delay(10);
-    
 }
 
 
@@ -115,12 +112,15 @@ void checkGameTime(){
 
   if (currentGameTime < 0){
     gameLive = false;
-    currentGameTime = 15;
+    currentGameTime = 30;
     //currentGameScore = 0;
+    playWav2.play("BUZZER.WAV");
     printMaxScore(highScore);
+    checkGameState();
+    delay(5000);
     printScore(0);
     printTime(currentGameTime);
-    playWav2.play("BUZZER.WAV");
+    serialFlush();
   }
 }
 
@@ -133,7 +133,12 @@ void checkForScore(){
       char c = Serial1.read();
       Serial.println(c);
       if (c == 'T'){
-        currentGameScore = currentGameScore + 2;
+      	if(currentGameTime < 10){
+      		currentGameScore = currentGameScore + 3;
+      	} else{
+      		currentGameScore = currentGameScore + 2;
+      	}
+        
         playWav1.play("Swish.WAV");
         printScore(currentGameScore);
         if (!gameLive){
@@ -163,3 +168,9 @@ void checkResetScoreButton(){
 		printMaxScore(0);
 	}
 }
+
+void serialFlush(){
+  while(Serial1.available() > 0) {
+    char t = Serial1.read();
+  }
+}  
